@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Belajar Hiragana</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Press Start 2P', monospace;
+    }
+    body {
+      background: linear-gradient(to bottom right, #c0c0c0, #f0f0f0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .window {
+      background: #ffffff;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .title-bar {
+      background: #e0e0e0;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .red { background: #ff5f57; }
+    .yellow { background: #ffbd2e; }
+    .green { background: #28c840; }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      background: #f0f0f0;
+    }
+    .tabs button {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .tabs button.active {
+      background: #ddd;
+    }
+    .content {
+      padding: 15px;
+    }
+
+    .cards, .quiz, .vocab {
+      display: none;
+    }
+    .cards.active, .quiz.active, .vocab.active {
+      display: grid;
+    }
+
+    .card {
+      perspective: 1000px;
+      width: 80px;
+      height: 80px;
+      margin: 5px;
+    }
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      position: relative;
+      cursor: pointer;
+    }
+    .card:hover .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      background: #fff;
+      border: 2px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      border-radius: 6px;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+      background: #f5f5f5;
+    }
+
+    .quiz-question {
+      text-align: center;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    .quiz-options button {
+      display: block;
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 10px;
+      background: #eee;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+    .quiz-options button:hover {
+      background: #ccc;
+    }
+    .quiz-feedback {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .vocab p {
+      margin: 6px 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="window">
+  <div class="title-bar">
+    <div class="dot red"></div>
+    <div class="dot yellow"></div>
+    <div class="dot green"></div>
+    <div style="margin-left:auto;font-weight:bold">Hiragana</div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="cards">Huruf</button>
+    <button class="tab-btn" data-tab="quiz">Kuis</button>
+    <button class="tab-btn" data-tab="vocab">Kosakata</button>
+  </div>
+  <div class="content">
+    <div class="cards active grid" id="card-container"></div>
+    <div class="quiz" id="quiz-container">
+      <div class="quiz-question" id="quiz-question"></div>
+      <div class="quiz-options" id="quiz-options"></div>
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+    </div>
+    <div class="vocab" id="vocab-container">
+      <h3>Kosakata Dasar</h3>
+      <p>あさ (asa) = pagi</p>
+      <p>ねこ (neko) = kucing</p>
+      <p>いぬ (inu) = anjing</p>
+      <p>すし (sushi) = sushi</p>
+      <p>やま (yama) = gunung</p>
+      <p>みず (mizu) = air</p>
+      <p>たまご (tamago) = telur</p>
+      <p>おちゃ (ocha) = teh</p>
+      <p>はな (hana) = bunga</p>
+      <p>さくら (sakura) = bunga sakura</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const hiragana = [
+    { kana: 'あ', romaji: 'a' }, { kana: 'い', romaji: 'i' },
+    { kana: 'う', romaji: 'u' }, { kana: 'え', romaji: 'e' },
+    { kana: 'お', romaji: 'o' }, { kana: 'か', romaji: 'ka' },
+    { kana: 'き', romaji: 'ki' }, { kana: 'く', romaji: 'ku' },
+    { kana: 'け', romaji: 'ke' }, { kana: 'こ', romaji: 'ko' },
+    { kana: 'さ', romaji: 'sa' }, { kana: 'し', romaji: 'shi' },
+    { kana: 'す', romaji: 'su' }, { kana: 'せ', romaji: 'se' },
+    { kana: 'そ', romaji: 'so' }, { kana: 'た', romaji: 'ta' },
+    { kana: 'ち', romaji: 'ti' }, { kana: 'つ', romaji: 'tu' },
+    { kana: 'て', romaji: 'te' }, { kana: 'と', romaji: 'to' },
+    { kana: 'な', romaji: 'na' }, { kana: 'に', romaji: 'ni' },
+    { kana: 'ぬ', romaji: 'nu' }, { kana: 'ね', romaji: 'ne' },
+    { kana: 'の', romaji: 'no' }, { kana: 'は', romaji: 'ha' },
+    { kana: 'ひ', romaji: 'hi' }, { kana: 'ふ', romaji: 'fu' },
+    { kana: 'へ', romaji: 'he' }, { kana: 'ほ', romaji: 'ho' },
+    { kana: 'ま', romaji: 'ma' }, { kana: 'み', romaji: 'mi' },
+    { kana: 'む', romaji: 'mu' }, { kana: 'め', romaji: 'me' },
+    { kana: 'も', romaji: 'mo' }, { kana: 'や', romaji: 'ya' },
+    { kana: 'ゆ', romaji: 'yu' }, { kana: 'よ', romaji: 'yo' },
+    { kana: 'ら', romaji: 'ra' }, { kana: 'り', romaji: 'ri' },
+    { kana: 'る', romaji: 'ru' }, { kana: 'れ', romaji: 're' },
+    { kana: 'ろ', romaji: 'ro' }, { kana: 'わ', romaji: 'wa' },
+    { kana: 'を', romaji: 'wo' }, { kana: 'ん', romaji: 'n' },
+  ];
+
+  const cardContainer = document.getElementById("card-container");
+  hiragana.forEach(h => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-front">${h.kana}</div>
+        <div class="card-back">${h.romaji}</div>
+      </div>`;
+    cardContainer.appendChild(card);
+  });
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.cards, .quiz, .vocab').forEach(c => c.classList.remove('active'));
+      document.querySelector(`.${tab}`).classList.add('active');
+    };
+  });
+
+  // Quiz
+  const quizQuestion = document.getElementById("quiz-question");
+  const quizOptions = document.getElementById("quiz-options");
+  const quizFeedback = document.getElementById("quiz-feedback");
+
+  function loadQuiz() {
+    const q = hiragana[Math.floor(Math.random() * hiragana.length)];
+    quizQuestion.textContent = `Apa romaji dari huruf: ${q.kana} ?`;
+    const options = [q.romaji];
+    while (options.length < 4) {
+      const r = hiragana[Math.floor(Math.random() * hiragana.length)].romaji;
+      if (!options.includes(r)) options.push(r);
+    }
+    options.sort(() => Math.random() - 0.5);
+    quizOptions.innerHTML = "";
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.textContent = opt;
+      btn.onclick = () => {
+        if (opt === q.romaji) {
+          quizFeedback.textContent = "✅ Benar!";
+        } else {
+          quizFeedback.textContent = `❌ Salah! Jawaban benar: ${q.romaji}`;
+        }
+        setTimeout(loadQuiz, 1500);
+      };
+      quizOptions.appendChild(btn);
+    });
+  }
+
+  loadQuiz();
+</script>
+</body>
+</html>
